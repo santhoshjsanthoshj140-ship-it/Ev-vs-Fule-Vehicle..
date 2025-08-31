@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ELECTRIC VEHICLE vs FUEL VEHICLE</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --card-bg: rgba(255,255,255,0.75);
+      --heading: #2563eb;
+      --text: #d81313;
+      --table-head: #e5e7eb;
+      --shadow: rgba(0,0,0,0.15);
+    }
+    body.dark:root{
+      --card-bg: rgba(30,41,59,0.75);
+      --heading: #60a5fa;
+      --text: #277bcf;
+      --table-head: #1e293b;
+      --shadow: rgba(204, 16, 16, 0.35);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, #eef2f3, #dfe9f3);
+      color: var(--text);
+      transition: background 0.4s, color 0.4s;
+      min-height: 100vh;
+    }
+    body.dark {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+    }
+    header {
+      padding: 18px 20px;
+      background: #2563eb;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 8px 20px var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    header #titleText {
+      font-size: 1.6rem;
+      font-weight: 800;
+      text-align: center;
+    }
+    header .btn-container {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      gap: 10px;
+    }
+    header button, header select {
+      background: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: 0.25s;
+    }
+    header button:hover, header select:hover { background: #fde68a; }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(645px, 1fr));
+      gap: 20px;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 8px 20px var(--shadow);
+      transition: transform 0.25s;
+    }
+    .card:hover { transform: translateY(-4px); }
+    h2 { margin-bottom: 15px; font-size: 1.25rem; color: var(--heading); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px; border-bottom: 1px solid #cbd5e1; text-align: center; }
+    th { background: var(--table-head); }
+    td.pollutant { cursor: pointer; color: #2563eb; font-weight: bold; }
+    td.pollutant:hover { text-decoration: underline; }
+
+    label { display: block; margin: 8px 0 4px; font-size: 0.95rem; }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-size: 1rem;
+      background: white;
+      color: BLACK;
+    }
+    body.dark input{
+      background: #7c9ada;
+      border-color: #334155;
+      color: var(--text);
+    }
+    .row{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    button.calc-btn {
+      width: 100%;
+      padding: 12px;
+      background: #2563eb;
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.25s;
+      font-weight: 700;
+    }
+    button.calc-btn:hover { background: #1d4ed8; }
+    #result { margin-top: 10px; font-weight: bold; font-size: 1rem; }
+
+    .img-container img { width: 100%; border-radius: 15px; }
+
+    .modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      align-items: center; justify-content: center; z-index: 2000;
+      padding: 20px;
+    }
+    .modal-content {
+      background: white; color: #111;
+      padding: 20px; border-radius: 15px;
+      max-width: 560px; width: 100%;
+      text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    body.dark .modal-content { background: #1549bb; color: var(--text); }
+    .close-btn { background: #ef4444; border: none; color: white; padding: 10px 14px; border-radius: 10px; cursor: pointer; margin-top: 15px; font-weight: 700; }
+    .close-btn:hover { background: #dc2626; }
+
+    #impactSection {
+      display: none; padding: 28px; text-align: left;
+      max-width: 1100px; margin: auto; line-height: 1.6;
+    }
+    #impactSection h2 { font-size: 2rem; margin-bottom: 16px; color: #dc2626; text-align: center; }
+    #impactSection h3 { margin-top: 18px; color: var(--heading); }
+    #impactSection table { margin-top: 16px; border: 1px solid #cbd5e1; }
+    #impactSection th, #impactSection td { border: 1px solid #cbd5e1; padding: 8px; text-align: center; }
+    #backBtn {
+      display: block; margin: 26px auto;
+      background: #2563eb; color: white;
+      border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer;
+      font-weight: 700;
+    }
+    #backBtn:hover { background: #1d4ed8; }
+
+    #breakdown { margin-top: 10px; overflow-x: auto; }
+    #calcHint { display: block; margin: 6px 0 10px; opacity: 0.85; font-size: 0.85rem; }
+
+    .muted{ opacity: 0.9; font-weight: 500; }
+    .badge{
+      display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; font-weight: 700;
+    }
+    .badge-ev{ background:#dcfce7; color:#065f46; }
+    .badge-fuel{ background:#fee2e2; color:#7f1d1d; }
+
+    @media (max-width: 720px){
+      header #titleText{ font-size: 1.1rem; }
+      .row{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span id="titleText">ELECTRIC VEHICLE vs FUEL VEHICLE</span>
+    <div class="btn-container">
+      <button id="impactBtn" onclick="showImpactPage()" aria-controls="impactSection">🌍 Impact</button>
+      <select id="language" aria-label="Change language" onchange="changeLanguage(this.value)">
+        <option value="en">English</option>
+        <option value="ta">தமிழ்</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+      <button id="themeBtn" onclick="toggleTheme()" aria-pressed="false">🌙 Theme</button>
+    </div>
+  </header>
+
+  <div id="mainContent">
+    <div class="dashboard">
+      
+      <div class="card" aria-labelledby="emissionTitle">
+        <h2 id="emissionTitle">Emission Comparison</h2>
+        <table role="table" aria-label="Emission comparison table">
+          <tr>
+            <th id="pollutant">Pollutant</th>
+            <th id="fuelVeh">Fuel Vehicles</th>
+            <th id="evVeh">Electric Vehicles</th>
+          </tr>
+          <tr>
+            <td class="pollutant" onclick="showImpact('co2')" id="co2Label" tabindex="0">CO₂</td>
+            <td id="co2Fuel" class="muted">High</td>
+            <td id="co2EV"><span class="badge badge-ev">Low</span></td>
+          </tr>
+          <tr>
+            <td class="pollutant" onclick="showImpact('nox')" id="noxLabel" tabindex="0">NOx</td>
+            <td id="noxFuel" class="muted">High</td>
+            <td id="noxEV"><span class="badge badge-ev">Almost None</span></td>
+          </tr>
+          <tr>
+            <td class="pollutant" onclick="showImpact('pm')" id="pmLabel" tabindex="0">PM2.5/PM10</td>
+            <td id="pmFuel" class="muted">Significant</td>
+            <td id="pmEV"><span class="badge badge-ev">Minimal</span></td>
+          </tr>
+          <tr>
+            <td class="pollutant" onclick="showImpact('hc')" id="hcLabel" tabindex="0">HC</td>
+            <td id="hcFuel" class="muted">Released</td>
+            <td id="hcEV"><span class="badge badge-ev">None</span></td>
+          </tr>
+        </table>
+        <canvas id="emissionChart" aria-label="Emission chart" role="img"></canvas>
+      </div>
+
+    
+      <div class="card" aria-labelledby="calcTitle">
+        <h2 id="calcTitle">Fuel vs EV Calculator</h2>
+
+        <label id="distLabel" for="distance">Daily Distance (km):</label>
+        <input type="number" id="distance" value="40" min="0" step="1" inputmode="decimal"/>
+
+        <div class="row">
+          <div>
+            <label id="mileLabel" for="mileage">Fuel Mileage (km/l):</label>
+            <input type="number" id="mileage" value="15" min="1" step="0.1" inputmode="decimal"/>
+          </div>
+          <div>
+            <label id="fuelPriceLabel" for="fuelPrice">Fuel Price (₹/liter):</label>
+            <input type="number" id="fuelPrice" value="100" min="1" step="0.1" inputmode="decimal"/>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label id="effLabel" for="efficiency">EV Efficiency (km/kWh):</label>
+            <input type="number" id="efficiency" value="6" min="1" step="0.1" inputmode="decimal"/>
+          </div>
+          <div>
+            <label id="elecLabel" for="elecPrice">Electricity Price (₹/kWh):</label>
+            <input type="number" id="elecPrice" value="8" min="1" step="0.1" inputmode="decimal"/>
+          </div>
+        </div>
+
+        <small id="calcHint">Assuming distance is per day. We also show Weekly (×7), Monthly (×30), and Yearly (×365).</small>
+        <button class="calc-btn" id="calcBtn" onclick="calculate()">Calculate</button>
+        <p id="result" aria-live="polite"></p>
+        <div id="breakdown"></div>
+      </div>
+
+      <div class="card img-container" aria-labelledby="visualTitle">
+        <h2 id="visualTitle">Which Vehicle You Will Buy Electric Vehicle or Fuel Vehicle Thing Lot?</h2>
+        <img src="hi.jpg.png" alt="Illustration: EV vs Fuel vehicle" onerror="this.style.display='none'"/>
+      </div>
+    </div>
+  </div>
+
+  <div id="impactSection">
+    <h2 id="impactTitle">📘 Impact of Electric Vehicles (EVs) vs Fuel Vehicles (Petrol & Diesel)</h2>
+
+    <h3 id="envImpact">1. Environmental Impact</h3>
+    <p id="envFuel"><b>Fuel Vehicles:</b> Emit CO₂, NOx, PM, SO₂, cause smog, acid rain, and depend on fossil fuels. Create noise pollution.</p>
+    <p id="envEV"><b>EVs:</b> Zero tailpipe emissions, reduce GHGs, quieter, small impact from battery production, promote sustainability.</p>
+    <p id="envCon">✅ <b>Conclusion:</b> EVs are far more environmentally friendly than petrol/diesel vehicles.</p>
+
+    <h3 id="ecoImpact">2. Economic Impact</h3>
+    <p id="ecoFuel"><b>Fuel Vehicles:</b> Depend on crude imports, volatile prices, high maintenance, but cheaper initially.</p>
+    <p id="ecoEV"><b>EVs:</b> Higher upfront cost, low running cost, minimal maintenance, subsidies available, boost local industries.</p>
+    <p id="ecoCon">✅ <b>Conclusion:</b> EVs are cost-efficient in the long run, while fuel vehicles are cheaper short term.</p>
+
+    <h3 id="healthImpact">3. Health & Social Impact</h3>
+    <p id="healthFuel"><b>Fuel Vehicles:</b> Cause respiratory and heart diseases, noise stress, reduce quality of life.</p>
+    <p id="healthEV"><b>EVs:</b> Improve air quality, reduce health costs, support green jobs, enable Vehicle-to-Grid.</p>
+    <p id="healthCon">✅ <b>Conclusion:</b> EVs positively impact health & society; fuel vehicles harm them.</p>
+
+    <h3 id="techImpact">4. Technological Impact</h3>
+    <p id="techFuel"><b>Fuel Vehicles:</b> Old ICE tech, limited innovation, rely on petrol pumps.</p>
+    <p id="techEV"><b>EVs:</b> Smart tech (AI, regenerative braking, autonomous), drive innovation in batteries, charging, and smart cities.</p>
+    <p id="techCon">✅ <b>Conclusion:</b> EVs are the future of mobility.</p>
+
+    <h3 id="globalImpact">5. Long-term Global Impact</h3>
+    <p id="globalFuel"><b>Fuel Vehicles:</b> Worsen climate change, increase oil dependency, risk fossil depletion.</p>
+    <p id="globalEV"><b>EVs:</b> Support Paris Agreement, reduce oil reliance, promote sustainability, accelerate renewables.</p>
+    <p id="globalCon">✅ <b>Conclusion:</b> EVs are essential for a sustainable future.</p>
+
+    <h3 id="tableTitle">📊 Comparison Table: EVs vs Fuel Vehicles</h3>
+    <table>
+      <tr><th id="aspect">Aspect</th><th id="fuelVehicles">Fuel Vehicles</th><th id="evVehicles">EVs</th></tr>
+      <tr><td id="emissions">Emissions</td><td id="emissionsFuel">High CO₂, NOx, PM, SO₂</td><td id="emissionsEV">Zero tailpipe emissions</td></tr>
+      <tr><td id="cost">Cost</td><td id="costFuel">Low purchase, high running</td><td id="costEV">High purchase, low running</td></tr>
+      <tr><td id="maint">Maintenance</td><td id="maintFuel">Frequent & costly</td><td id="maintEV">Minimal, cheaper</td></tr>
+      <tr><td id="noise">Noise</td><td id="noiseFuel">High (engine)</td><td id="noiseEV">Very low</td></tr>
+      <tr><td id="energy">Energy Source</td><td id="energyFuel">Fossil fuels</td><td id="energyEV">Electricity (renewable)</td></tr>
+      <tr><td id="health">Health Impact</td><td id="healthFuelTable">Diseases & pollution</td><td id="healthEVTable">Healthier cities</td></tr>
+      <tr><td id="tech">Technology</td><td id="techFuelTable">Old ICE</td><td id="techEVTable">Advanced (AI, battery)</td></tr>
+      <tr><td id="future">Future Outlook</td><td id="futureFuel">Declining</td><td id="futureEV">Growing</td></tr>
+    </table>
+
+    <h3 id="summaryTitle">🎯 Final Summary</h3>
+    <p id="summaryText">
+      EVs are a game-changer for sustainable transport. While fuel vehicles are still common due to affordability and infrastructure, their long-term costs to health and the environment are massive.
+      EVs, despite challenges like battery production and charging infrastructure, provide a clean, cost-efficient, and technologically advanced alternative that will shape the future of mobility.
+    </p>
+
+    <button id="backBtn" onclick="goBack()">⬅ Back to Dashboard</button>
+  </div>
+
+  <div id="impactModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalText">
+    <div class="modal-content">
+      <h3 id="modalTitle"></h3>
+      <p id="modalText"></p>
+      <button class="close-btn" id="closeBtn" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+
+  <script>
+    let chart;
+    function buildChart() {
+      const ctx = document.getElementById('emissionChart').getContext('2d');
+      if (chart) chart.destroy();
+      const isDark = document.body.classList.contains('dark');
+      const fuelColor = isDark ? 'rgba(248,113,113,0.85)' : 'rgba(239,68,68,0.8)';
+      const evColor   = isDark ? 'rgba(134,239,172,0.9)' : 'rgba(34,197,94,0.8)';
+
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: [
+            document.getElementById('co2Label').innerText,
+            document.getElementById('noxLabel').innerText,
+            document.getElementById('pmLabel').innerText,
+            document.getElementById('hcLabel').innerText
+          ],
+          datasets: [
+            { label: document.getElementById('fuelVeh').innerText, data: [90, 85, 80, 70], backgroundColor: fuelColor, borderRadius: 6 },
+            { label: document.getElementById('evVeh').innerText,   data: [15,  5, 10,  0], backgroundColor: evColor,   borderRadius: 6 }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}` } }
+          },
+          scales: {
+            x: { grid: { display:false } },
+            y: {
+              beginAtZero: true, max: 100,
+              ticks: { stepSize: 20 }
+            }
+          }
+        }
+      });
+    }
+
+    function formatINR(num) {
+      return '₹' + Number(num).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function calculate() {
+      const distance = Math.max(0, +document.getElementById('distance').value || 0); 
+      const mileage = +document.getElementById('mileage').value;
+      const fuelPrice = +document.getElementById('fuelPrice').value;
+      const efficiency = +document.getElementById('efficiency').value;
+      const elecPrice = +document.getElementById('elecPrice').value;
+
+      if (!mileage || !efficiency || !fuelPrice || !elecPrice) {
+        document.getElementById('result').innerHTML = '<span style="color:#ef4444">Please enter valid non-zero values for mileage, efficiency and prices.</span>';
+        document.getElementById('breakdown').innerHTML = '';
+        return;
+      }
+
+      const computeFor = (km) => {
+        const fuelUsed = km / mileage;      
+        const fuelCost = fuelUsed * fuelPrice;
+        const elecUsed = km / efficiency;   
+        const evCost   = elecUsed * elecPrice;
+        const co2Fuel  = fuelUsed * 2.3;    
+        const co2EV    = elecUsed * 0.7;    
+      return { km, fuelUsed, fuelCost, elecUsed, evCost, co2Fuel, co2EV, savings: fuelCost - evCost };
+      };
+
+      const periods = [
+        { name: 'Daily', mul: 1 },
+        { name: 'Weekly', mul: 7 },
+        { name: 'Monthly', mul: 30 },
+        { name: 'Yearly', mul: 365 },
+      ];
+
+      const rows = periods.map(p => ({ period: p.name, ...computeFor(distance * p.mul) }));
+      const d = rows[0];
+      document.getElementById('result').innerHTML = `
+        🚗 <b>${document.getElementById('fuelVeh').innerText} ${rows[0].period} Cost:</b> ${formatINR(d.fuelCost)}
+        &nbsp; | &nbsp;
+        ⚡ <b>${document.getElementById('evVeh').innerText} ${rows[0].period} Cost:</b> ${formatINR(d.evCost)}<br/>
+        🌍 CO₂ Fuel: ${d.co2Fuel.toFixed(2)} kg &nbsp; | &nbsp; 🌱 CO₂ EV: ${d.co2EV.toFixed(2)} kg
+      `;
+
+      const tableHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Distance (km)</th>
+              <th>${document.getElementById('fuelVeh').innerText} Cost</th>
+              <th>${document.getElementById('evVeh').innerText} Cost</th>
+              <th>Savings</th>
+              <th>CO₂ Fuel (kg)</th>
+              <th>CO₂ EV (kg)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => `
+              <tr>
+                <td>${r.period}</td>
+                <td>${r.km.toFixed(0)}</td>
+                <td>${formatINR(r.fuelCost)}</td>
+                <td>${formatINR(r.evCost)}</td>
+                <td>${formatINR(r.savings)}</td>
+                <td>${r.co2Fuel.toFixed(2)}</td>
+                <td>${r.co2EV.toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+      document.getElementById('breakdown').innerHTML = tableHTML;
+    }
+
+    
+    ['distance','mileage','fuelPrice','efficiency','elecPrice'].forEach(id=>{
+      document.getElementById(id).addEventListener('keydown', e=>{
+        if(e.key === 'Enter'){ e.preventDefault(); calculate(); }
+      });
+    });
+
+
+    function toggleTheme() {
+      const body = document.body;
+      const isDark = body.classList.toggle('dark');
+      document.getElementById('themeBtn').setAttribute('aria-pressed', String(isDark));
+      localStorage.setItem('ev_theme', isDark ? 'dark' : 'light');
+      buildChart(); 
+    }
+
+
+    const impactTexts = {
+      en: {
+        co2: {
+          title: 'CO₂ (Carbon Dioxide)',
+          text: 'Fuel vehicles emit CO₂ from burning petrol/diesel, contributing heavily to climate change. EVs have near-zero tailpipe CO₂; upstream electricity emissions depend on the grid mix and can drop further with renewables.'
+        },
+        nox: {
+          title: 'NOx (Nitrogen Oxides)',
+          text: 'ICE engines create NOx at high temperatures → smog, respiratory issues, acid rain. EVs produce negligible NOx at the point of use.'
+        },
+        pm: {
+          title: 'Particulate Matter (PM2.5/PM10)',
+          text: 'Fuel vehicles emit fine particles from exhaust and brake/tyre wear. EVs avoid exhaust PM; regenerative braking reduces brake dust, though tyre wear remains for both.'
+        },
+        hc: {
+          title: 'HC (Unburnt Hydrocarbons)',
+          text: 'Incomplete combustion in ICE releases hydrocarbons (some carcinogenic). EVs have no combustion so no tailpipe HC.'
+        }
+      },
+      ta: {
+        co2: { title: 'CO₂ (கார்பன் டைஆக்சைடு)', text: 'பெட்ரோல்/டீசலை எரிப்பதால் CO₂ வெளிவந்து காலநிலை மாற்றத்தை அதிகரிக்கிறது. EV களில் tailpipe CO₂ இல்லை; மின்சார உற்பத்தி முறைப்படி மொத்த CO₂ மாறும்.' },
+        nox: { title: 'NOx (நைட்ரஜன் ஆக்சைடுகள்)', text: 'ICE எஞ்சின்களில் அதிக வெப்பத்தில் NOx உருவாகிறது → புகை மூட்டம், சுவாசப் பிரச்சினைகள். EV களில் பயன்பாட்டிடத்தில் NOx கணிசமில்லை.' },
+        pm:  { title: 'PM2.5/PM10', text: 'எக்ஸாஸ்ட் மற்றும் பிரேக்/டயர் kulai மூலம் PM வெளிவரும். EV களில் எக்ஸாஸ்ட் PM இல்லை; ரீஜெனரேட்டிவ் பிரேக்கிங் பிரேக் தூசியை குறைக்கும்.' },
+        hc:  { title: 'HC (Hydrocarbons)', text: 'ICE இல் முழுமையற்ற எரிப்பு காரணமாக HC வெளியீடு. EV களில் எரிப்பு இல்லை, அதனால் tailpipe HC இல்லை.' }
+      },
+      hi: {
+        co2: { title: 'CO₂ (कार्बन डाइऑक्साइड)', text: 'पेट्रोल/डीज़ल जलने से CO₂ निकलता है जो जलवायु परिवर्तन बढ़ाता है। ईवी में टेलपाइप CO₂ नहीं; कुल उत्सर्जन ग्रिड पर निर्भर और नवीकरणीय ऊर्जा से कम होता है।' },
+        nox: { title: 'NOx (नाइट्रोजन ऑक्साइड्स)', text: 'ICE इंजन उच्च तापमान पर NOx बनाते हैं → स्मॉग, श्वसन समस्याएँ, अम्ल वर्षा. ईवी में उपयोग स्थल पर NOx नगण्य.' },
+        pm:  { title: 'कण पदार्थ (PM2.5/PM10)', text: 'ईंधन वाहन एग्जॉस्ट और ब्रेक/टायर घिसावट से PM निकालते हैं. ईवी में एग्जॉस्ट PM नहीं; रीजेन ब्रेकिंग से ब्रेक धूल कम.' },
+        hc:  { title: 'HC (हाइड्रोकार्बन)', text: 'ICE में अपूर्ण दहन से HC निकलता है (कुछ कैंसरकारी). ईवी में दहन नहीं, इसलिए टेलपाइप HC नहीं.' }
+      }
+    };
+
+    function showImpact(key) {
+      const lang = localStorage.getItem('ev_lang') || 'en';
+      const dict = impactTexts[lang]?.[key] || impactTexts.en[key];
+      document.getElementById('modalTitle').innerText = dict.title;
+      document.getElementById('modalText').innerText = dict.text;
+      const modal = document.getElementById('impactModal');
+      modal.style.display = 'flex';
+      
+      setTimeout(()=>document.getElementById('closeBtn').focus(), 0);
+    }
+    function closeModal() { document.getElementById('impactModal').style.display = 'none'; }
+    
+    document.addEventListener('keydown', e=>{
+      if(e.key === 'Escape') closeModal();
+    });
+    document.getElementById('impactModal').addEventListener('click', e=>{
+      if(e.target.id === 'impactModal') closeModal();
+    });
+
+    
+    function showImpactPage() {
+      document.getElementById('mainContent').style.display = 'none';
+      document.getElementById('impactSection').style.display = 'block';
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+    function goBack() {
+      document.getElementById('impactSection').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    
+    const translations = {
+      en: {
+        titleText: 'ELECTRIC VEHICLE vs FUEL VEHICLE',
+        emissionTitle: 'Emission Comparison',
+        pollutant: 'Pollutant',
+        fuelVeh: 'Fuel Vehicles',
+        evVeh: 'Electric Vehicles',
+        co2Label: 'CO₂',
+        noxLabel: 'NOx',
+        pmLabel: 'PM2.5/PM10',
+        hcLabel: 'HC',
+        calcTitle: 'Fuel vs EV Calculator',
+        distLabel: 'Daily Distance (km):',
+        mileLabel: 'Fuel Mileage (km/l):',
+        fuelPriceLabel: 'Fuel Price (₹/liter):',
+        effLabel: 'EV Efficiency (km/kWh):',
+        elecLabel: 'Electricity Price (₹/kWh):',
+        calcBtn: 'Calculate',
+        calcHint: 'Assuming distance is per day. We also show Weekly (×7), Monthly (×30), and Yearly (×365).',
+        visualTitle: 'Which Vehicle  You Will Buy Electric Vehicle or Fuel Vehicle Thing Lot?',
+        impactBtn: '🌍 Impact',
+        themeBtn: '🌙 Theme',
+        impactTitle: '📘 Impact of Electric Vehicles (EVs) vs Fuel Vehicles (Petrol & Diesel)',
+        envImpact: '1. Environmental Impact',
+        envFuel: 'Fuel Vehicles: Emit CO₂, NOx, PM, SO₂, cause smog, acid rain, and depend on fossil fuels. Create noise pollution.',
+        envEV: 'EVs: Zero tailpipe emissions, reduce GHGs, quieter, small impact from battery production, promote sustainability.',
+        envCon: '✅ Conclusion: EVs are far more environmentally friendly than petrol/diesel vehicles.',
+        ecoImpact: '2. Economic Impact',
+        ecoFuel: 'Fuel Vehicles: Depend on crude imports, volatile prices, high maintenance, but cheaper initially.',
+        ecoEV: 'EVs: Higher upfront cost, low running cost, minimal maintenance, subsidies available, boost local industries.',
+        ecoCon: '✅ Conclusion: EVs are cost-efficient in the long run, while fuel vehicles are cheaper short term.',
+        healthImpact: '3. Health & Social Impact',
+        healthFuel: 'Fuel Vehicles: Cause respiratory and heart diseases, noise stress, reduce quality of life.',
+        healthEV: 'EVs: Improve air quality, reduce health costs, support green jobs, enable Vehicle-to-Grid.',
+        healthCon: '✅ Conclusion: EVs positively impact health & society; fuel vehicles harm them.',
+        techImpact: '4. Technological Impact',
+        techFuel: 'Fuel Vehicles: Old ICE tech, limited innovation, rely on petrol pumps.',
+        techEV: 'EVs: Smart tech (AI, regenerative braking, autonomous), drive innovation in batteries, charging, and smart cities.',
+        techCon: '✅ Conclusion: EVs are the future of mobility.',
+        globalImpact: '5. Long-term Global Impact',
+        globalFuel: 'Fuel Vehicles: Worsen climate change, increase oil dependency, risk fossil depletion.',
+        globalEV: 'EVs: Support Paris Agreement, reduce oil reliance, promote sustainability, accelerate renewables.',
+        globalCon: '✅ Conclusion: EVs are essential for a sustainable future.',
+        tableTitle: '📊 Comparison Table: EVs vs Fuel Vehicles',
+        aspect: 'Aspect',
+        fuelVehicles: 'Fuel Vehicles',
+        evVehicles: 'Electric Vehicles',
+        emissions: 'Emissions',
+        emissionsFuel: 'High CO₂, NOx, PM, SO₂',
+        emissionsEV: 'Zero tailpipe emissions',
+        cost: 'Cost',
+        costFuel: 'Low purchase, high running',
+        costEV: 'High purchase, low running',
+        maint: 'Maintenance',
+        maintFuel: 'Frequent & costly',
+        maintEV: 'Minimal, cheaper',
+        noise: 'Noise',
+        noiseFuel: 'High (engine)',
+        noiseEV: 'Very low',
+        energy: 'Energy Source',
+        energyFuel: 'Fossil fuels',
+        energyEV: 'Electricity (renewable)',
+        health: 'Health Impact',
+        healthFuelTable: 'Diseases & pollution',
+        healthEVTable: 'Healthier cities',
+        tech: 'Technology',
+        techFuelTable: 'Old ICE',
+        techEVTable: 'Advanced (AI, battery)',
+        future: 'Future Outlook',
+        futureFuel: 'Declining',
+        futureEV: 'Growing',
+        summaryTitle: '🎯 Final Summary',
+        summaryText: 'EVs are a game-changer for sustainable transport. While fuel vehicles are still common due to affordability and infrastructure, their long-term costs to health and the environment are massive. EVs, despite challenges like battery production and charging infrastructure, provide a clean, cost-efficient, and technologically advanced alternative that will shape the future of mobility.',
+        backBtn: '⬅ Back to Dashboard'
+      },
+      ta: {
+        titleText: 'மின்சார வாகனம் vs எரிபொருள் வாகனம்',
+        emissionTitle: 'மாசுபாடு ஒப்பீடு',
+        pollutant: 'மாசுபடுத்தும்',
+        fuelVeh: 'எரிபொருள் வாகனங்கள்',
+        evVeh: 'மின்சார வாகனங்கள்',
+        co2Label: 'CO₂',
+        noxLabel: 'NOx',
+        pmLabel: 'PM2.5/PM10',
+        hcLabel: 'HC',
+        calcTitle: 'எரிபொருள் vs மின்சார கணிப்பான்',
+        distLabel: 'தினசரி தூரம் (கி.மீ):',
+        mileLabel: 'எரிபொருள் மைலேஜ் (கி.மீ/லிட்டர்):',
+        fuelPriceLabel: 'எரிபொருள் விலை (₹/லிட்டர்):',
+        effLabel: 'மின்சார திறன் (கி.மீ/kWh):',
+        elecLabel: 'மின்சாரம் விலை (₹/kWh):',
+        calcBtn: 'கணக்கிடு',
+        calcHint: 'தூரம் தினசரி என கருதப்படுகிறது. வாரம் (×7), மாதம் (×30), வருடம் (×365) ஆகியவையும் காட்டப்படும்.',
+        visualTitle: 'நீங்கள் எந்த வாகனத்தை வாங்குவீர்கள், மின்சார வாகனம் அல்லது எரிபொருள் வாகனம் எது?',
+        impactBtn: '🌍 தாக்கம்',
+        themeBtn: '🌙 தீம்',
+        impactTitle: '📘 மின்சார வாகனங்கள் (EVs) vs எரிபொருள் வாகனங்கள் (பெட்ரோல் & டீசல்) தாக்கம்',
+        envImpact: '1. சுற்றுச்சூழல் தாக்கம்',
+        envFuel: 'எரிபொருள் வாகனங்கள்: CO₂, NOx, PM, SO₂ வெளியிடுகின்றன, புகை மூட்டம், அமில மழை உருவாக்குகின்றன, பாசிச எரிபொருள் மீது சார்ந்தவை. ஒலி மாசுபாட்டை ஏற்படுத்துகின்றன.',
+        envEV: 'மின்சார வாகனங்கள்: வெளியீடு இல்லாதவை, GHG குறைக்கின்றன, அமைதியானவை, பேட்டரி உற்பத்தியில் சிறிய தாக்கம், நிலைத்தன்மையை ஊக்குவிக்கின்றன.',
+        envCon: '✅ முடிவு: மின்சார வாகனங்கள் சுற்றுச்சூழலுக்கு நட்பானவை.',
+        ecoImpact: '2. பொருளாதார தாக்கம்',
+        ecoFuel: 'எரிபொருள் வாகனங்கள்: எண்ணெய் இறக்குமதி, விலை மாறுபாடு, அதிக பராமரிப்பு, ஆரம்ப விலை குறைவு.',
+        ecoEV: 'மின்சார வாகனங்கள்: அதிக ஆரம்ப செலவு, குறைந்த இயக்க செலவு, குறைந்த பராமரிப்பு, மானியம் கிடைக்கும், உள்ளூர் தொழில்களை மேம்படுத்தும்.',
+        ecoCon: '✅ முடிவு: நீண்ட காலத்தில் மின்சார வாகனங்கள் செலவினத்தில் சிறந்தவை.',
+        healthImpact: '3. சுகாதார & சமூக தாக்கம்',
+        healthFuel: 'எரிபொருள் வாகனங்கள்: சுவாச, இதய நோய்கள், ஒலி மன அழுத்தம், வாழ்க்கை தரத்தை குறைக்கின்றன.',
+        healthEV: 'மின்சார வாகனங்கள்: காற்று தரத்தை மேம்படுத்துகின்றன, சுகாதார செலவினத்தை குறைக்கின்றன, பசுமை வேலை வாய்ப்புகளை உருவாக்குகின்றன.',
+        healthCon: '✅ முடிவு: மின்சார வாகனங்கள் சுகாதாரத்திலும் சமூகத்திலும் நல்லவை.',
+        techImpact: '4. தொழில்நுட்ப தாக்கம்',
+        techFuel: 'எரிபொருள் வாகனங்கள்: பழைய தொழில்நுட்பம், குறைந்த புதுமை.',
+        techEV: 'மின்சார வாகனங்கள்: செயற்கை நுண்ணறிவு, புத்திசாலி தொழில்நுட்பம், பேட்டரி புதுமை.',
+        techCon: '✅ முடிவு: மின்சார வாகனங்கள் எதிர்காலம்.',
+        globalImpact: '5. உலகளாவிய நீண்டகால தாக்கம்',
+        globalFuel: 'எரிபொருள் வாகனங்கள்: காலநிலை மாற்றம், எண்ணெய் சார்பு அதிகரிப்பு.',
+        globalEV: 'மின்சார வாகனங்கள்: பாரிஸ் உடன்பாடு ஆதரிப்பு, எண்ணெய் சார்பு குறைப்பு.',
+        globalCon: '✅ முடிவு: நிலையான எதிர்காலத்திற்கு மின்சார வாகனங்கள் அவசியம்.',
+        tableTitle: '📊 ஒப்பீட்டு அட்டவணை: மின்சார vs எரிபொருள்',
+        aspect: 'வகை',
+        fuelVehicles: 'எரிபொருள் வாகனங்கள்',
+        evVehicles: 'மின்சார வாகனங்கள்',
+        emissions: 'மாசு',
+        emissionsFuel: 'அதிக CO₂, NOx, PM, SO₂',
+        emissionsEV: 'வெளியீடு இல்லை',
+        cost: 'செலவு',
+        costFuel: 'குறைந்த வாங்கு, அதிக செலவு',
+        costEV: 'அதிக வாங்கு, குறைந்த செலவு',
+        maint: 'பராமரிப்பு',
+        maintFuel: 'அடிக்கடி, அதிகம்',
+        maintEV: 'குறைந்தது',
+        noise: 'சத்தம்',
+        noiseEV: 'குறைவு',
+        energy: 'ஆற்றல் மூலம்',
+        energyFuel: 'எரிபொருள்',
+        energyEV: 'மின்சாரம் (மறு உற்பத்தி)',
+        health: 'சுகாதாரம்',
+        healthFuelTable: 'நோய்கள், மாசு',
+        healthEVTable: 'சுத்தமான நகரங்கள்',
+        tech: 'தொழில்நுட்பம்',
+        techFuelTable: 'பழைய ICE',
+        techEVTable: 'புதுமை (AI, பேட்டரி)',
+        future: 'எதிர்காலம்',
+        futureFuel: 'குறைவு',
+        futureEV: 'அதிகரிப்பு',
+        summaryTitle: '🎯 இறுதி சுருக்கம்',
+        summaryText: 'மின்சார வாகனங்கள் நிலையான போக்குவரத்திற்கு மாற்று. எரிபொருள் வாகனங்கள் மலிவு ஆனால் நீண்ட காலத்தில் சுகாதார, சுற்றுச்சூழல் பாதிப்பு அதிகம். மின்சார வாகனங்கள் சுத்தமானவை, பொருளாதாரமானவை.',
+        backBtn: '⬅ டாஷ்போர்டுக்கு திரும்பு'
+      },
+      hi: {
+        titleText: 'ईवी बनाम ईंधन वाहन डैशबोर्ड',
+        emissionTitle: 'उत्सर्जन तुलना',
+        pollutant: 'प्रदूषक',
+        fuelVeh: 'ईंधन वाहन',
+        evVeh: 'ईवी',
+        co2Label: 'CO₂',
+        noxLabel: 'NOx',
+        pmLabel: 'PM2.5/PM10',
+        hcLabel: 'HC',
+        calcTitle: 'ईंधन बनाम ईवी कैलकुलेटर',
+        distLabel: 'दैनिक दूरी (कि.मी):',
+        mileLabel: 'ईंधन माइलेज (कि.मी/ली):',
+        fuelPriceLabel: 'ईंधन मूल्य (₹/लीटर):',
+        effLabel: 'ईवी दक्षता (कि.मी/kWh):',
+        elecLabel: 'बिजली मूल्य (₹/kWh):',
+        calcBtn: 'गणना करें',
+        calcHint: 'दूरी को दैनिक माना गया है। हम साप्ताहिक (×7), मासिक (×30) और वार्षिक (×365) भी दिखाते हैं।',
+        visualTitle: 'आप कौन सा वाहन खरीदेंगे - इलेक्ट्रिक वाहन या ईंधन वाहन',
+        impactBtn: '🌍 प्रभाव',
+        themeBtn: '🌙 थीम',
+        impactTitle: '📘 ईवी बनाम ईंधन वाहनों (पेट्रोल और डीजल) का प्रभाव',
+        envImpact: '1. पर्यावरणीय प्रभाव',
+        envFuel: 'ईंधन वाहन: CO₂, NOx, PM, SO₂ छोड़ते हैं, धुंध और अम्लीय वर्षा का कारण बनते हैं.',
+        envEV: 'ईवी: शून्य उत्सर्जन, GHG कम करते हैं, शांत, बैटरी उत्पादन से कुछ प्रभाव.',
+        envCon: '✅ निष्कर्ष: ईवी पर्यावरण के लिए अधिक अनुकूल हैं.',
+        ecoImpact: '2. आर्थिक प्रभाव',
+        ecoFuel: 'ईंधन वाहन: तेल आयात पर निर्भर, मूल्य अस्थिर, रखरखाव महंगा.',
+        ecoEV: 'ईवी: प्रारंभिक लागत अधिक, संचालन लागत कम, कम रखरखाव, सब्सिडी उपलब्ध.',
+        ecoCon: '✅ निष्कर्ष: दीर्घकाल में ईवी किफायती हैं.',
+        healthImpact: '3. स्वास्थ्य और सामाजिक प्रभाव',
+        healthFuel: 'ईंधन वाहन: श्वसन रोग, हृदय रोग, शोर तनाव.',
+        healthEV: 'ईवी: वायु गुणवत्ता सुधारते हैं, स्वास्थ्य लागत कम करते हैं.',
+        healthCon: '✅ निष्कर्ष: ईवी स्वास्थ्य और समाज के लिए अच्छे हैं.',
+        techImpact: '4. तकनीकी प्रभाव',
+        techFuel: 'ईंधन वाहन: पुरानी तकनीक, सीमित नवाचार.',
+        techEV: 'ईवी: स्मार्ट टेक्नोलॉजी, बैटरी नवाचार, एआई.',
+        techCon: '✅ निष्कर्ष: ईवी भविष्य हैं.',
+        globalImpact: '5. दीर्घकालिक वैश्विक प्रभाव',
+        globalFuel: 'ईंधन वाहन: जलवायु परिवर्तन खराब करते हैं, तेल पर निर्भरता बढ़ाते हैं.',
+        globalEV: 'ईवी: पेरिस समझौते का समर्थन, तेल पर निर्भरता कम करते हैं.',
+        globalCon: '✅ निष्कर्ष: सतत भविष्य के लिए ईवी आवश्यक हैं.',
+        tableTitle: '📊 तुलना तालिका: ईवी बनाम ईंधन',
+        aspect: 'पहलू',
+        fuelVehicles: 'ईंधन वाहन',
+        evVehicles: 'ईवी',
+        emissions: 'उत्सर्जन',
+        emissionsFuel: 'उच्च CO₂, NOx, PM, SO₂',
+        emissionsEV: 'शून्य उत्सर्जन',
+        cost: 'लागत',
+        costFuel: 'कम खरीद, उच्च संचालन',
+        costEV: 'उच्च खरीद, कम संचालन',
+        maint: 'रखरखाव',
+        maintFuel: 'बार-बार, महंगा',
+        maintEV: 'न्यूनतम, सस्ता',
+        noise: 'शोर',
+        noiseEV: 'बहुत कम',
+        energy: 'ऊर्जा स्रोत',
+        energyFuel: 'जीवाश्म ईंधन',
+        energyEV: 'बिजली (नवीकरणीय)',
+        health: 'स्वास्थ्य प्रभाव',
+        healthFuelTable: 'बीमारियाँ और प्रदूषण',
+        healthEVTable: 'स्वच्छ शहर',
+        tech: 'तकनीक',
+        techFuelTable: 'पुराना ICE',
+        techEVTable: 'उन्नत (AI, बैटरी)',
+        future: 'भविष्य दृष्टिकोण',
+        futureFuel: 'गिरावट',
+        futureEV: 'वृद्धि',
+        summaryTitle: '🎯 अंतिम सारांश',
+        summaryText: 'ईवी सतत परिवहन के लिए परिवर्तनकारी हैं. ईंधन वाहन सस्ते हैं लेकिन दीर्घकाल में स्वास्थ्य और पर्यावरण पर भारी लागत डालते हैं. ईवी साफ, किफायती और तकनीकी रूप से उन्नत विकल्प प्रदान करते हैं.',
+        backBtn: '⬅ डैशबोर्ड पर वापस जाएँ'
+      }
+    };
+
+    function changeLanguage(lang) {
+      const dict = translations[lang] || translations.en;
+      for (let key in dict) {
+        const el = document.getElementById(key);
+        if (el) el.innerText = dict[key];
+      }
+      
+      localStorage.setItem('ev_lang', lang);
+      document.getElementById('language').value = lang;
+
+      
+      buildChart();
+      
+      calculate();
+    }
+
+    
+    (function init(){
+      
+      const savedTheme = localStorage.getItem('ev_theme');
+      if(savedTheme === 'dark') {
+        document.body.classList.add('dark');
+        document.getElementById('themeBtn').setAttribute('aria-pressed','true');
+      }
+    
+      const savedLang = localStorage.getItem('ev_lang') || 'en';
+      changeLanguage(savedLang);
+
+      buildChart();
+      calculate();
+    })();
+  </script>
+</body>
+</html>
+
